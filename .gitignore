@@ -1,0 +1,6 @@
+#exclude files with data 
+*.dat
+#exclude exe files
+*.exe
+#exclude object 
+*.o
