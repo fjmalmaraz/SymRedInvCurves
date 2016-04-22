@@ -3,15 +3,11 @@
 #include <math.h>
 #include <complex.h>
 #include <fftw3.h>
-#include <bits/nan.h>
+
 
 #include "parameter.h"
-#include "cont_complex.h"
+#include "symmetric_curves.h"
 
-//#define MODOS_MAX 3000000 // In my laptop 
-//#define MODOS_MAX 7000000 // In my desktop computer
-//#define MODOS_MAX 55000000 // In kronos
-#define MODOS_MAX 80000000
 
 double f(double x){
    return atan(x);
@@ -21,42 +17,47 @@ double df(double x){
   return 1.0/(1.0+x*x);
 }
 
+double ddf(double x){
+  double aux;
+  aux=df(x);
+  return -2.0*aux*aux*x;
+}
 double g(double x){
   return sin(x);
 }
 
-int func( fourier *sol,  double *fourierSeries,double a,double b){
+int func( fourier *sol,  double *Fzero,double a,double b){
  int j,dmod=(sol->mod);
  double sum;
- fourierSeries[dmod]=0.;
+ Fzero[dmod]=0.;
  for(j=0;j<dmod;j++){
    sum=(sol->tab)[j];
-   fourierSeries[j]=((sol->tabom)[j])-f(a*sum)-b*g(M_PI*j/((double)dmod));
-   fourierSeries[dmod]+=log(fabs(a*df(a*sum)));
+   Fzero[j]=((sol->tabom)[j])-f(a*sum)-b*g(M_PI*j/((double)dmod));
+   Fzero[dmod]+=log(fabs(a*df(a*sum)));
   }
-  fourierSeries[dmod]/= (double) dmod;
-  fourierSeries[dmod]-=LE;
+  Fzero[dmod]/= (double) dmod;
+  Fzero[dmod]-=LE;
    
- return 0;
+ return EXIT_SUCCESS;
 }
 
 int salir(char *mensaje,double a,double b,fourier *u){
   FILE *sol;
-  printf(mensaje);
-  if((sol=fopen("sol.dat","wb"))==NULL){printf("Error opening file sol.dat!\n"); exit(1); }
+  printf("%s\n",mensaje);
+  if((sol=fopen("sol.dat","wb"))==NULL){printf("Error opening file sol.dat!\n"); exit(EXIT_FAILURE); }
   fwrite(&a,sizeof(double),1,sol);
   fwrite(&b,sizeof(double),1,sol);
   fwrite(&(u->mod),sizeof(int),1,sol);
   fwrite(u->coef,sizeof(complex),u->mod,sol);	  
   fclose(sol);
-  printf(mensaje);
-  exit(1);
-  return 0;
+  printf("%s\n",mensaje);
+  exit(EXIT_FAILURE);
+  return EXIT_SUCCESS;
   }
   
 int main(){
   int ndim=101,j,iout,iter,ifin=1,dmod=ndim-1,prim;
-  double a=2.44153,sum,lon=0.,h=0.01,aold=a,*fourierSeries,hold=h,liapunov,hb,b,bold,bold1,error,aux,lonold=0.;
+  double a=INITIAL_A,sum,lon=0.,h=0.01,aold=a,*Fzero,hold=h,liapunov,hb,b,bold,bold1,error,aux,lonold=0.,autabj;
   fourier u,uold,uold1,cred,dbF,itF,tint,y;
   FILE *bd,*tabu;
   
@@ -64,35 +65,35 @@ int main(){
   cred.type=HALF_PERIODIC; 
   printf("Programa continua bifurcaciones\n");
 
-  if ((fourierSeries = (double*) malloc(ndim*sizeof(double)))==NULL){printf("no memory in f (1)\n"); exit(1);}
+  if ((Fzero = (double*) malloc(ndim*sizeof(double)))==NULL){printf("no memory in f (1)\n"); exit(EXIT_FAILURE);}
   dimensiona(INICIO,&u,dmod);
   dimensiona(INICIO,&cred,dmod);
   dimensiona(INICIO,&uold,dmod);dimensiona(INICIO,&uold1,0);
 
 
-  bold1=bold=b=1.9;
-  u.coef[0]=(2.6220033115E-01-7.5384363165E-01*I)/2.;
-  u.coef[1]=(-1.9204713762E-01-7.6114155828E-02*I)/2.;
-  u.coef[2]=1.1766929986E-01/2.;
+  bold1=bold=b=INITIAL_B;
+  u.coef[0]=INITIAL_SOLUTION_0;
+  u.coef[1]=INITIAL_SOLUTION_1;
+  u.coef[2]=INITIAL_SOLUTION_2;
   for (j=3;j<dmod/2;j++) u.coef[j]=0.;
-  uold.coef[0]=(2.6220033115E-01-7.5384363165E-01*I)/2.;
-  uold.coef[1]=(-1.9204713762E-01-7.6114155828E-02*I)/2.;
-  uold.coef[2]=1.1766929986E-01/2.;
+  uold.coef[0]=INITIAL_SOLUTION_0;
+  uold.coef[1]=INITIAL_SOLUTION_1;
+  uold.coef[2]=INITIAL_SOLUTION_2;
   for (j=3;j<dmod/2;j++) uold.coef[j]=0.;
   
   
  
- if((bd=fopen("bd.dat","w"))==NULL) { printf("Error opening file bd.dat!\n"); exit(1); }
- if((tabu=fopen("tabu.dat","w"))==NULL) { printf("Error opening file bd.dat!\n"); exit(1); }
+ if((bd=fopen("bd.dat","w"))==NULL) { printf("Error opening file bd.dat!\n"); exit(EXIT_FAILURE); }
+ if((tabu=fopen("tabu.dat","w"))==NULL) { printf("Error opening file bd.dat!\n"); exit(EXIT_FAILURE); }
  prim=0;
   while(ifin>0){
    iout=1;   iter=0;
    while(iout>0){
      tabulacion(&u,u.tab);
      tabulacion(&u,u.tabom);
-     func(&u,fourierSeries, a, b); 
+     func(&u,Fzero, a, b); 
      error=0.;
-     for(j=0;j<ndim;j++) if(error<fabs(fourierSeries[j])) error=fabs(fourierSeries[j]);
+     for(j=0;j<ndim;j++) if(error<fabs(Fzero[j])) error=fabs(Fzero[j]);
      printf("Error: %e\n",error);
      if ((iter>5)||(error>2.)){
 	h*=0.5;
@@ -115,15 +116,14 @@ int main(){
                               else cred.coef[j]/=(cexp(-4.*M_PI*j*OMEGA*I)-1.); }
        tabulacion(&cred,cred.tab);  tabulacion(&cred,cred.tabom); 
        for(j=0;j<dmod;j++){cred.tab[j]=exp(cred.tab[j]);cred.tabom[j]=exp(cred.tabom[j]);}
-       sum=0.; for(j=1;j<dmod;j++) {aux=liapunov*cred.tabom[j]-cred.tab[j]*a/(1.+a*a*u.tab[j]*u.tab[j]);
+       sum=0.; for(j=1;j<dmod;j++) {aux=liapunov*cred.tabom[j]-cred.tab[j]*a*df(a*u.tab[j]);
                      sum+=aux*aux;}
        printf("Error reduccion: %e \n",sum);
        if(sum>EPS*EPS) {printf("Cambio\n");
 	   dmod+=2*(dmod/10); ndim=dmod+1;iter=0; 
-           free(fourierSeries);
-           if ((fourierSeries=(double*)malloc(ndim*sizeof(double)))==NULL){printf("no memory in f (2)"); exit(1);}
-	   if(dmod > MODOS_MAX){ salir("Excede el tamagno",a,b,&u); 
-	   }
+           free(Fzero);
+           if ((Fzero=(double*)malloc(ndim*sizeof(double)))==NULL){printf("no memory in f (2)"); exit(EXIT_FAILURE);}
+	   if(dmod > MODOS_MAX){ salir("Excede el tamagno",a,b,&u); }
            dimensiona(CAMBIO,&u,dmod); ;dimensiona(CAMBIO,&cred,dmod);
 	   b=bold+(bold-bold1)*h/hold;
 	   for(j=0;j<uold1.mod/2;j++) u.coef[j]=uold.coef[j]+(uold.coef[j]-uold1.coef[j])*h/hold;
@@ -143,18 +143,22 @@ int main(){
            solution 
            L_j:= \sum_{k=0}^{n-1}  e^{-i\pi k/n} d(\theta_k) c(\theta_k) e^{-i2\pi j k /n} 
 	 */ 
-        if ((tint.tab = (double*) calloc((dmod),sizeof(double)))==NULL){printf("no memory in tabulacion\n"); exit(1);}
+        if ((tint.tab = (double*) calloc((dmod),sizeof(double)))==NULL){printf("no memory in tabulacion\n"); exit(EXIT_FAILURE);}
         for(j=0;j<dmod;j++){
-	  tint.tab[j]=-2.*a*a*u.tab[j]*cred.tab[j]*df(a*u.tab[j]);
+          autabj=a*u.tab[j];
+          //For feneral functions f and g 
+          //tint.tab[j]=a*ddf(autabj)/df(autabj);
+          //This is the most efficient  calculation for the example in the paper 
+	  tint.tab[j]=-2.*a*autabj*cred.tab[j]*df(autabj);
         }
-	if ((tint.coef = (complex*) calloc((dmod/2),sizeof(complex)))==NULL){printf("no memory in u\n"); exit(1);}
+	if ((tint.coef = (complex*) calloc((dmod/2),sizeof(complex)))==NULL){printf("no memory in u\n"); exit(EXIT_FAILURE);}
         coef_integral(&tint);
         free(tint.tab);
-        if ((dbF.tab = (double*) calloc((dmod),sizeof(double)))==NULL){printf("no memory in tabulacion\n"); exit(1);}
+        if ((dbF.tab = (double*) calloc((dmod),sizeof(double)))==NULL){printf("no memory in tabulacion\n"); exit(EXIT_FAILURE);}
         for(j=0;j<dmod;j++){ 
-         dbF.tab[j]=sin(M_PI*j/dmod)/cred.tabom[j]; 
+         dbF.tab[j]=g(M_PI*j/dmod)/cred.tabom[j]; 
         }
-        if ((dbF.coef = (complex*) calloc((dmod/2),sizeof(complex)))==NULL){printf("no memory in u\n"); exit(1);}
+        if ((dbF.coef = (complex*) calloc((dmod/2),sizeof(complex)))==NULL){printf("no memory in u\n"); exit(EXIT_FAILURE);}
         coeficiente(&dbF);
         free(dbF.tab);
         sum=0.; 
@@ -164,24 +168,24 @@ int main(){
 	 }
         }  
 	sum*=2.; 
-        if ((itF.tab = (double*) calloc((dmod),sizeof(double)))==NULL){printf("no memory in tabulacion\n"); exit(1);}
+        if ((itF.tab = (double*) calloc((dmod),sizeof(double)))==NULL){printf("no memory in tabulacion\n"); exit(EXIT_FAILURE);}
         for(j=0;j<dmod;j++){ 
-	    itF.tab[j]=fourierSeries[j]/cred.tabom[j];	    
+	    itF.tab[j]=Fzero[j]/cred.tabom[j];	    
         }
-        if ((itF.coef = (complex*) calloc((dmod/2),sizeof(complex)))==NULL){printf("no memory in u\n"); exit(1);}
+        if ((itF.coef = (complex*) calloc((dmod/2),sizeof(complex)))==NULL){printf("no memory in u\n"); exit(EXIT_FAILURE);}
         coeficiente(&itF);
         free(itF.tab);
         hb=0.;
         for(j=dmod/2-1;-1<j;j--){ 
 	   if(cabs( itF.coef[j])>1.e-16) hb-=tint.coef[j]*itF.coef[j]/(cexp(-2.*M_PI*(2*j+1)*OMEGA*I)-liapunov);
         }
-	hb*=2.; hb+=fourierSeries[dmod]; hb/=sum;
+	hb*=2.; hb+=Fzero[dmod]; hb/=sum;
         free(tint.coef);
-        if ((y.coef = (complex*) calloc((dmod/2),sizeof(complex)))==NULL){printf("no memory in u\n"); exit(1);}
+        if ((y.coef = (complex*) calloc((dmod/2),sizeof(complex)))==NULL){printf("no memory in u\n"); exit(EXIT_FAILURE);}
         for(j=0;j<dmod/2;j++) {if(cabs(hb*dbF.coef[j]+itF.coef[j])>1.e-16) y.coef[j]=(hb*dbF.coef[j]+itF.coef[j])/(cexp(-2.*M_PI*(2*j+1)*OMEGA*I)-liapunov);
 	          else y.coef[j]=0.;}
         free(dbF.coef);free(itF.coef);
-        if ((y.tab = (double*) calloc((dmod),sizeof(double)))==NULL){printf("no memory in tabulacion\n"); exit(1);}
+        if ((y.tab = (double*) calloc((dmod),sizeof(double)))==NULL){printf("no memory in tabulacion\n"); exit(EXIT_FAILURE);}
         tabulacion(&y,y.tab);
         for(j=0;j<dmod;j++) y.tab[j]*=cred.tab[j];
         coeficiente(&y);
@@ -202,8 +206,8 @@ int main(){
      printf("Cambio\n");dmod*=2; ndim=dmod+1;iter=0; 
      
      
-     free(fourierSeries);
-     if ((fourierSeries=(double*)malloc(ndim*sizeof(double)))==NULL){printf("no memory in f(3)"); exit(1);}
+     free(Fzero);
+     if ((Fzero=(double*)malloc(ndim*sizeof(double)))==NULL){printf("no memory in f(3)"); exit(EXIT_FAILURE);}
       if(dmod > MODOS_MAX)salir("Excede el tamagno",a,b,&u);
      
      dimensiona(CAMBIO,&u,dmod);      
@@ -220,7 +224,7 @@ int main(){
      if(iter==0) h*=2.;
      if(iter==1) h*=1.5;
      if(iter==4) h*=0.8;
-     if(iter==5) h*=0.5; 
+     if(iter>4 ) h*=0.5; 
      if (fabs(h)<1.e-09)salir("too much small step (end)",a,b,&u);
     
      printf("Iteraciones: %d dimension: %d  a: %e\n", iter, ndim,a); 
@@ -240,13 +244,13 @@ int main(){
      if(uold1.mod<uold.mod){
        uold1.mod=uold.mod;
        free(uold1.coef);
-       if ((uold1.coef = (complex*) calloc((uold1.mod/2),sizeof(complex)))==NULL){printf("no memory in u\n"); exit(1);}
+       if ((uold1.coef = (complex*) calloc((uold1.mod/2),sizeof(complex)))==NULL){printf("no memory in u\n"); exit(EXIT_FAILURE);}
      }
      for(j=0;j<uold1.mod/2;j++) uold1.coef[j]=uold.coef[j];
      if(uold.mod<u.mod){
        uold.mod=u.mod;
        free(uold.coef);
-       if ((uold.coef = (complex*) calloc((uold.mod/2),sizeof(complex)))==NULL){printf("no memory in u\n"); exit(1);}
+       if ((uold.coef = (complex*) calloc((uold.mod/2),sizeof(complex)))==NULL){printf("no memory in u\n"); exit(EXIT_FAILURE);}
      }
      for(j=0;j<uold.mod/2;j++) uold.coef[j]=u.coef[j];
      for(j=0;j<uold1.mod/2;j++) u.coef[j]=uold.coef[j]+(uold.coef[j]-uold1.coef[j])*h/hold;
@@ -257,5 +261,5 @@ int main(){
   }     
   fclose(bd);
     
-  return 0;
+  return EXIT_SUCCESS;
 }

@@ -2,11 +2,11 @@
 # Makefile for building a program that calls a routine from
 # the CLAPACK Library
 #
-#
+# En MaC es necesario -I/opt/local/include -L/opt/local/lib/
 
 CC = gcc
 CFLAGS =-O3 -Wall 
-LLAPK= -lfftw3 -llapack -lblas -lm
+LLAPK= -lfftw3  -lm
 
 
 cont_complex.exe: cont_complex.o 
