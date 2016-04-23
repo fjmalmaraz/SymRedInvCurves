@@ -37,7 +37,6 @@ int func( fourier *sol,  double *Fzero,double a,double b){
   }
   Fzero[dmod]/= (double) dmod;
   Fzero[dmod]-=LE;
-   
  return EXIT_SUCCESS;
 }
 
@@ -83,8 +82,8 @@ int main(){
   
   
  
- if((bd=fopen("bd.dat","w"))==NULL) { printf("Error opening file bd.dat!\n"); exit(EXIT_FAILURE); }
- if((tabu=fopen("tabu.dat","w"))==NULL) { printf("Error opening file bd.dat!\n"); exit(EXIT_FAILURE); }
+ if((bd=fopen(BD_FILE,"w"))==NULL) { printf("Error opening file bd.dat!\n"); exit(EXIT_FAILURE); }
+ if((tabu=fopen(TABU_FILE,"w"))==NULL) { printf("Error opening file tabu.dat!\n"); exit(EXIT_FAILURE); }
  prim=0;
   while(ifin>0){
    iout=1;   iter=0;

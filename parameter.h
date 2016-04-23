@@ -18,6 +18,14 @@
 #define INITIAL_B 1.9
 #endif
 
+#ifndef BD_FILE 
+#define BD_FILE "bd.dat"
+#endif 
+
+#ifndef TABU_FILE
+#define TABU_FILE "tabu.dat"
+#endif 
+
 #ifndef INITIAL_SOLUTION
 #define INITIAL_SOLUTION 
 #define INITIAL_SOLUTION_0 (2.6220033115E-01-7.5384363165E-01*I)/2.
