@@ -2,12 +2,17 @@
 #define OMEGA .618033988749894848204586834365
 #endif
 
+#ifndef EPS_FLOQUET
+#define EPS_FLOQUET 1.e-7
+#endif
+
+
 #ifndef EPS
 #define EPS 1.e-7
 #endif
 
 #ifndef LE
-#define LE 0.00
+#define LE 0.006
 #endif
 
 #ifndef INITIAL_A
@@ -16,6 +21,10 @@
 
 #ifndef INITIAL_B
 #define INITIAL_B 1.9
+#endif
+
+#ifndef INITIAL_CONTINUATION_STEP
+#define INITIAL_CONTINUATION_STEP 0.01
 #endif
 
 #ifndef BD_FILE 

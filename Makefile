@@ -8,13 +8,17 @@ CC = gcc
 CFLAGS =-O3 -Wall 
 LLAPK= -lfftw3  -lm
 
+all: cont_complex.exe
+	echo $<
 
-cont_complex.exe: cont_complex.o 
-	$(CC) $(CFLAGS) cont_complex.o  -o cont_complex.exe  -lfftw3 -lm
+cont_complex.exe: cont_complex.o symmetric_curves.o
+	$(CC) $(CFLAGS) $^ -o $@  -lfftw3 -lm
 
-cont_complex.o: cont_complex.c cont_complex.h parameter.h
-	$(CC) $(CFLAGS) cont_complex.c  -c
+cont_complex.o: cont_complex.c parameter.h
+	$(CC) $(CFLAGS) $<   -c
 
+symmetric_curves.o: symmetric_curves.c symmetric_curves.h
+	$(CC) $(CFLAGS)  $< -c
 contb.exe: contb.o
 	$(CC) $(CFLAGS) contb.o  -o contb.exe $(LLAPK)
 
