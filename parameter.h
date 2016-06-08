@@ -12,15 +12,16 @@
 #endif
 
 #ifndef LE
-#define LE 0.006
+#define LE 0.0
 #endif
 
 #ifndef INITIAL_A
-#define INITIAL_A 2.44153
+#define INITIAL_A exp(LE)
 #endif
 
 #ifndef INITIAL_B
-#define INITIAL_B 1.9
+//#define INITIAL_B 1.9
+#define INITIAL_B 0.0
 #endif
 
 #ifndef INITIAL_CONTINUATION_STEP
@@ -35,11 +36,12 @@
 #define TABU_FILE "tabu.dat"
 #endif 
 
+
 #ifndef INITIAL_SOLUTION
 #define INITIAL_SOLUTION 
-#define INITIAL_SOLUTION_0 (2.6220033115E-01-7.5384363165E-01*I)/2.
-#define INITIAL_SOLUTION_1 (-1.9204713762E-01-7.6114155828E-02*I)/2.
-#define INITIAL_SOLUTION_2 1.1766929986E-01/2.
+#define INITIAL_SOLUTION_0 0.0+0.0*I
+#define INITIAL_SOLUTION_1 0.0+0.0*I
+#define INITIAL_SOLUTION_2 0.0+0.0*I
 #endif
 
 //#define MODOS_MAX 3000000 // In my laptop 

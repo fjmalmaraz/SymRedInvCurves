@@ -104,10 +104,10 @@ int main(){
   
 
   b=INITIAL_B;
-  bold=b;
-  bold1=bold;
-  aold=a-h; 
-  aold1=aold-h;
+  bold=b-h;
+  bold1=bold-h;
+  aold=a; 
+  aold1=aold;
   hold=h;
   u.coef[0]=INITIAL_SOLUTION_0;
   u.coef[1]=INITIAL_SOLUTION_1;
