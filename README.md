@@ -16,7 +16,7 @@ maps (a.k.a skew-product)  with Lyapunov exponent constant. This software has be
 Execute the following commands on a terminal 
 
 ```sh
-$ git clone [git-repo-url]  SymRedInvCurves
+$ git clone https://github.com/fjmalmaraz/SymRedInvCurves SymRedInvCurves
 $ cd SymRedInvCurves
 $ make
 $ ./cont_complex.exe
@@ -30,20 +30,25 @@ The forced 1-D map can be change modifying the file [cont_complex.c](https://git
 
 > Copyright (c) 2016, Francisco Javier Muñoz-Almaraz
 > All rights reserved.
+>
 > 
 > Redistribution and use in source and binary forms, with or without
 > modification, are permitted provided that the following conditions are met:
+>
 > 1. Redistributions of source code must retain the above copyright
->    notice, this list of conditions and the following disclaimer.
+> notice, this list of conditions and the following disclaimer.
+>
 > 2. Redistributions in binary form must reproduce the above copyright
->    notice, this list of conditions and the following disclaimer in the
->    documentation and/or other materials provided with the distribution.
+> notice, this list of conditions and the following disclaimer in the
+> documentation and/or other materials provided with the distribution.
+>
 > 3. All advertising materials mentioning features or use of this software
->    must display the following acknowledgement:
->    This product includes software developed by Francisco Javier Muñoz-Almaraz.
+> must display the following acknowledgement:
+> This product includes software developed by Francisco Javier Muñoz-Almaraz.
+>
 > 4. Neither the name of the Francisco Javier Muñoz-Almaraz nor the
->    names of its contributors may be used to endorse or promote products
->    derived from this software without specific prior written permission.
+> names of its contributors may be used to endorse or promote products
+> derived from this software without specific prior written permission.
 > 
 > THIS SOFTWARE IS PROVIDED BY Francisco Javier Muñoz-Almaraz ''AS IS'' AND ANY
 > EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
