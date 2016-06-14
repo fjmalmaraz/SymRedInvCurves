@@ -7,3 +7,8 @@
 *.o
 #local mac
 EjecutarMAC
+#auxiliar files in tex 
+doc/*.aux
+doc/*.log
+doc/*.out
+doc/*.gz

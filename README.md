@@ -7,7 +7,7 @@ maps (a.k.a skew-product)  with Lyapunov exponent constant. This software has be
 
 ## Software dependencies 
 
-- A C compiler, GCC-4.2 compiler has been used for all the calculationsin the paper 
+- A C compiler, GCC-4.2 compiler has been used for all the calculations in the paper 
 
 - Fast Fourier Transform West [FFTW](http://www.fftw.org/) with a public repository in Github [https://github.com/FFTW/fftw3](https://github.com/FFTW/fftw3).
 
@@ -24,7 +24,7 @@ $ ./cont_complex.exe
 
 ## Settings 
 
-The forced 1-D map can be change modifying the file [cont_complex.c](https://github.com/fjmalmaraz/SymRedInvCurves/blob/master/cont_complex.c). Parameters to control continuation method can be modified in [parameter.h](https://github.com/fjmalmaraz/SymRedInvCurves/blob/master/parameter.h). A description is provided in the doc folder.
+The forced 1-D map can be change modifying the file [cont_complex.c](https://github.com/fjmalmaraz/SymRedInvCurves/blob/master/cont_complex.c). Parameters to control continuation method can be modified in [parameter.h](https://github.com/fjmalmaraz/SymRedInvCurves/blob/master/parameter.h). A description is provided in the [documetation](https://github.com/fjmalmaraz/SymRedInvCurves/blob/master/doc/SymRedInvCurves.pdf) (doc folder).
 
 ## Licence (BSD) 
 

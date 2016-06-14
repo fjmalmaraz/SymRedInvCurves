@@ -1,0 +1,310 @@
+\documentclass{article} 
+\usepackage{amsmath,amsfonts,amsthm,amssymb} %AMS package
+\usepackage{mathrsfs} % For numerical sets.
+\usepackage{hyperref}
+\usepackage[perpage,symbol*]{footmisc}
+\def\atan{\mathop{\mathrm{atan}}}
+\def\Re{\mathop{\mathrm{Re}}}
+\def\Im{\mathop{\mathrm{Im}}}
+\oddsidemargin 0cm
+\textwidth 16cm 
+\title{SymRedInvCurves:\\ Symmetric Reducible Invariant Curves }
+\author{\`A.~Jorba \footnote{Universitat de Barcelona, Departament de
+    Matem\`atiques i Inform\`atica  }, F.J. Mu\~noz-Almaraz\footnote{Universidad CEU-Cardenal Herrera, depto. Ciencias
+  F\'{\i}sicas, Matem\'aticas y de la Computaci\'on }, J.C.~Tatjer\textsuperscript{*}}
+\begin{document} 
+
+\maketitle
+
+
+
+
+This is a software to find 1--parameter families of symmetric invariant curves of a forced 1-D
+maps with Lyapunov exponent constant. These 1-D maps are also called
+skew--products and we study the following parametric systems
+\begin{equation} \label{eq:system}
+\left \{ 
+\begin{array}{@{}l}
+x_{n+1}=f(a\,x_n)+ b\, g(\theta_n) 
+\\
+\noalign{\smallskip}
+\theta_{n+1}=\theta_n +\omega
+\end{array} 
+\right .
+\end{equation} 
+where $f$ is an odd function and $g$ is periodic, being both of them
+analytical functions. The system is
+invariant  with respect to the change of variable  $(\theta,x)\mapsto
+(\theta+\pi,-x)$ and the symmetric curve is invariant w.r.t this
+change, i.e. $x(\theta+1/2)=-x(\theta)$. 
+
+A full description of the algorithm used in this repository  can be found in the
+preprint~\cite{Angel16}.  These algorithm use the Discrete Fourier
+Transform (DFT) and  the library
+FFTW~\cite{FFTW} has been employed and its installation is required. 
+
+The functions $f$ and $g$ are defined in the file
+\texttt{cont\_complex.c} with 	homonymous name. Moreover, first and
+second derivatives of $f$ have to be defined with the function names
+\texttt{df} and \texttt{ddf}. Other parameters have been defined in
+the file \texttt{parameter.h}
+
+
+
+ 
+
+Newton's method is the main ingredient of continuation techniques
+which implies to solve  linear systems in an iterative way. After reduction of a
+1-D map around an approximated solution a system with the following
+framework must be solved 
+
+\begin{equation}\label{sist_exp_liap_const}
+\left \{
+\begin{array}{l}
+h_y(\theta+\omega)=\lambda h_y(\theta) +h_a \,
+u_a(\theta)+h_b\,u_b(\theta), \\
+2 \int^{1/2}_0 d(\theta) h(\theta) \, d\theta=L.
+\end{array}
+\right .
+\end{equation} 
+where the unknown are $h_y$ a symmetric function, $h_a$ and $h_b$, and
+the data are the functions $u_a$, $u_b$, $d$ and the number
+$L$. Following the procedure given by~\cite{Angel16}, it is possible to
+uncouple the system, getting a linear system whose unknowns are $h_a$
+and $h_b$ and their coefficients are calculated according to the
+function in Section~\ref{sec:ReducedCoefficient}.
+
+\section{Description of parameters} 
+
+The file \texttt{parameter.h} defines the folowing parameters: 
+\begin{description}
+\item[\texttt{OMEGA}] This is the shift of the angular variable in the
+  system. The default value is the conjugate of the golden ratio,
+  $\Phi= .618033988749894848204586834365$. 
+\item[\texttt{EPS\_FLOQUET}]  This is the maximum error during the
+  reduction procedure.
+\item[\texttt{EPS}] This is the maximum error solving the
+  equation. Meanwhile, new iterations are calculated to reduce the
+  error. 
+\item[\texttt{LE}] Lyapunov exponent constant for all the solutions in
+  the continuation. 
+\item[\texttt{INITIAL\_A}] Initial value of the parameter $a$ to start the
+  continuation. 
+\item[\texttt{INITIAL\_B}] Initial value of the parameter $b$ to start the
+  continuation. 
+\item[\texttt{INITIAL\_CONTINUATION\_STEP}] Initial step of
+  continuation, after that the continuation algorithm adapt the step to garantee
+  a fast convergence to the solution.
+\item[\texttt{BD\_FILE}] The name of the file where data are saved for
+  each calculated solution. The first column is the parameter $a$, the
+  second column the parameter $b$, the third column is the length of
+  the invariant  curve, the number of Newton's method iteration to converge,
+  continuation step and error. The default value is \texttt{bd.dat}
+\item[\texttt{TABU\_FILE}] The name of the file where every table
+  values on a uniform mesh on $[0,1/2]$ for the solution
+  is stored, separated by an empty line. The default value is \texttt{tabu.dat}
+\item[\texttt{INITIAL\_SOLUTION}]  It assigns  the three first coefficients of
+  the Fourier series of the starting solution.  
+\item[\texttt{MODOS\_MAX}] It is the maximum number of Fourier
+  coefficients allowed to perform the continuation. If more coefficients
+  are needed to get a solution with the last 10\% of coefficient less
+  than EPS*EPS*EPS, the program is stopped. 
+\end{description}
+
+\paragraph{Caviat:} The value of \texttt{MODOS\_MAX} must be small
+enough to avoid exceeding the computer memory. 
+
+\section{Fourier Series (\texttt{fourier} structure)}
+Here we describe the file\verb@symmetric_curves.c@. There is a header
+file associated with the same name.  A
+structure is defined which contains the information about the
+function. This structure consists of the following attributes: 
+\begin{description}
+  \item[\texttt{mod}] This is the  number of terms in the Fourier series
+    describing the function.
+  \item[\texttt{type}] There
+exist two types \verb@SYMMETRIC@ (1) and \verb@HALF_PERIODIC@ (0). Some
+methods have a different behaviour depending on this variable. 
+ \item[\texttt{coef}] This is a complex vector containing the values of the
+   Fourier series.
+\item[\texttt{tab}] This is a vector with the values of the function on a
+  uniform mesh in $[0,1/2]$
+\item[\texttt{tabom}] This is a vector with the values of the function on a
+  uniform mesh in $[\omega,1/2+\omega]$. Please, notice that the
+  inteval is considered in the torus modulus 1. 
+\end{description}
+There are several methods which are applied to this structure:
+\begin{description}
+\item[\texttt{dimensiona}] Init the
+vectors and increase the dimension if they were previously defined.
+\item[\texttt{tabulacion}] Given the Fourier coefficients the values of the function on a
+  uniform mesh in $[0,1/2]$ are calculated. 
+\item[\texttt{coeficiente}] Given the value of the function on a mesh, the
+  Fourier coefficients are described. 
+\item[\texttt{coef\_integral}] Procedure to calculate the values of
+  the coefficients of Trapezoidal rule. 
+\end{description}
+ 
+\subsection{ Type \texttt{SYMMETRIC}}
+We consider $x:\mathbb{R}/\mathbb{Z}\to \mathbb{R}$ such that $x(\theta+\frac 1 2)=-x(\theta)$ 
+The function $\theta\mapsto e^{i\pi \theta} x(\theta/2)$ is 1-periodic. Indeed,
+\begin{equation}
+e^{i\pi(\theta+1)}x(\frac{\theta+1}{2})=-e ^{i\pi\theta} x(\frac{\theta}{2}+\frac 1 2) =
+e^{i\pi\theta} x(\theta/2).
+\end{equation}
+If $\tilde{\theta}_k$ is a uniform mesh of $[0,1]$, with $\tilde{\theta}_k=k/n$ 
+There exists $\{Y_j\}_{j=0}^{n-1}$ whose FFT interpolates the function on the points $\tilde{\theta}_k$, i.e 
+$\{Y_j\}_{j=0}^{n-1}$ verifies 
+\begin{equation}
+e^{i\pi\tilde{\theta}_k} x(\tilde{\theta}_k/2)=
+\sum^{n-1}_{j=0} Y_j e^{-2\pi j\tilde{\theta}_k i} =
+\sum^{n-1}_{j=0} Y_j e^{-i2\pi j k /n}=\mbox{DFT}(\{Y_j\}_{j=0}^{n-1})
+\end{equation}
+\subsubsection{Calculation of the function on a mesh $[0,1/2]$}
+An uniform mesh of $[0,1/2]$ is given by $\theta_k=\tilde{\theta}_k/2$. So,
+$e^{2i\pi\theta_k} x(\theta_k)=\mbox{DFT}(\{Y_j\}_{j=0}^{n-1})$.
+
+\paragraph{Description of calculation of \texttt{fourier.tab}:} Given the coefficients of the Fourier series $ \{Y_j\}_{j=0}^{n-1}$,
+if $X_k$ is the output of DFT, i.e.~$\{ X_k
+\}_{k=0}^{n-1}=DFT(\{Y_j\}_{j=0}^{n-1})$. The value of the function
+on $\theta_k$ is given by $e^{i\pi k/n}X_k$. 
+%\begin{equation}
+%\{Y_j\}_{j=0}^{n-1}\stackrel{DFT}{\longrightarrow}\{ X_k \}_{k=0}^{n-1}\stackrel{e^{i\pi k/n}X_k}{\longrightarrow}
+%\{ x(\theta_k) \}_{k=0}^{n-1}
+%\end{equation}
+
+The points $ \{ x(\theta_k) \}_{k=0}^{n-1}$ are given by 
+\begin{equation}
+x(\theta_k)= \sum_{j=0}^{n-1} Y_j e^{-i2\pi(2j+1) \theta_k}
+\end{equation}
+
+\paragraph{Calculation of coefficients \texttt{fourier.coef}:} Given
+the values  of the function  $ \{X_j\}_{j=0}^{n-1}$ on a mesh
+$[0,1/2]$, we calculate the inverse DFT of $e^{2i\pi \, k /n}X_k$, i.e
+$\{Y_j\}_{j=0}^{n-1}=DFT^{-1}(e^{2i\pi \, k /n})$. 
+
+
+\subsubsection{Calculation of tabom}
+The function $\tilde{\theta}\mapsto x(\tilde{\theta}/2)$ is approximate to 
+\begin{equation} 
+ e^{i\pi \tilde{\theta}}x(\tilde{\theta}/2)
+\sim
+\sum^{n/2-1}_{j=0} Y_j e^{-i 2\pi j \tilde{\theta}} +
+\sum^{n/2-1}_{j=0} Y_{n-1-j} e^{i 2\pi (j+1) \tilde{\theta}}
+\end{equation} 
+With the change $ \theta=\frac{\tilde{\theta}}{2}$
+\begin{equation}
+x(\theta)\sim\sum^{n/2-1}_{j=0} Y_j e^{-i2\pi(2j+1) \theta} +
+\sum^{n/2-1}_{j=0}Y_{n-1-j} e^{i2\pi(2j+1) \theta}
+\end{equation}
+Obviously, if $x(\theta)$ is well approximated, then
+$\overline{Y_j}=Y_{n-1-j}$.
+So, 
+$x(\theta_k+\omega)$ is approximate to
+\begin{equation}\label{aproximacion_theta_omega}
+x(\theta_k+\omega)\sim 
+\sum^{n/2-1}_{j=0} Y_j e^{-i2\pi(2j+1) \omega} e^{-i\pi(2j+1)k/n}+
+\sum^{n/2-1}_{j=0} Y_{n-1-j} e^{i2\pi(2j+1) \omega} e^{i\pi(2j+1)k/n}
+\end{equation}
+We define  $Z_j:=Y_j e^{-i2\pi(2j+1) \omega}$ for $j=0,...,n/2-1$ and $Z_j=\overline{Z_{n-1-j}}$ for $j=n/2,...,n-1$.
+ So,
+\begin{equation}
+\sum^{n/2-1}_{j=0} Y_{n-1-j} e^{i2\pi(2j+1) \omega} e^{i\pi(2j+1)k/n}=
+\sum^{n/2-1}_{j=0} \overline{Z_j} e^{i\pi(2j+1)k/n}=
+\sum^{n-1}_{j=n/2} Z_j e^{i\pi (2n-2j-1)k/n}= 
+\sum^{n-1}_{j=n/2} Z_j e^{-i\pi (2j+1)k/n}
+\end{equation}
+With the Equation~\eqref{aproximacion_theta_omega} we have, 
+\begin{equation}
+x(\theta_k+\omega)\sim  \sum^{n-1}_{j=0} Z_j e^{-i\pi (2j+1)k/n}
+= e^{-i\pi k/n}\sum^{n-1}_{j=0} Z_j e^{-i\pi (2j+1)k/n}=
+\mbox{DFT}(\{Z_j\}_{j=0}^{n-1})
+\end{equation}
+
+\paragraph{Description of calculation of \texttt{fourier.tabom}:} Given the coefficients $\{Y_j\}_{j=0}^{n-1}$ of the
+Fourier series, we apply the formula to define $Z_j$ and we apply
+discrete Fourier transform (DFT). The output is the values of the
+function on the mesh $[\omega,1/2+\omega]$
+%\begin{equation}
+%\{Y_j\}_{j=0}^{n-1} \stackrel{}{\longrightarrow} \{Z_j\}_{j=0}^{n-1}
+%\stackrel{\mbox{DFT}}{\longrightarrow} \{ x(\theta_k+\omega)\}_{k=0}^{n-1}
+%\end{equation}
+
+
+\subsection{Type \texttt{HALF SYMMETRIC}}
+Use  the Discrete Fourier Transform for a real function.  
+
+\section{Coefficient    of a reduced system}
+\label{sec:ReducedCoefficient}
+
+
+Given the function  $r$  
+$$\label{reduced_systemcoef}
+y(\theta+\omega)=\lambda y(\theta) + r(\theta) \\
+$$
+We calculate an approximation of the integral $2 \int^{1/2}_0
+d(\theta) y(\theta) \, d\theta$ 
+
+This function is implemented in the function
+\verb@coefficient_parameter_system@ the first parameter are the series
+corresponding to $d(\theta)$ and the second parameter the series of
+the independent term $r(\theta)$, the third parameter $\lambda$ and
+the fourth parameter is number of modes $n$.
+
+\begin{verbatim}
+double coefficient_parameter_system(fourier *tint,fourier *rf,double lambda,double dmod)
+\end{verbatim}
+
+We consider the following series for every function
+\begin{align}
+y(\theta)& = \sum^{n/2-1}_{j=0} Y_j e^{-i2\pi(2j+1) \theta} +
+\sum^{n/2-1}_{j=0}\overline{Y_{j}} e^{i2\pi(2j+1) \theta} \\
+r(\theta)& = \sum^{n/2-1}_{j=0} R_j e^{-i2\pi(2j+1) \theta} +
+\sum^{n/2-1}_{j=0}\overline{R_j} e^{i2\pi(2j+1) \theta} 
+\end{align}
+We substitute in~\eqref{reduced_systemcoef} and we get 
+\begin{equation}
+Y_j e^{-i2\pi(2j+1) \omega}= \lambda Y_j+R_j, \qquad \forall j=0,\ldots,\frac n 2 -1.
+\end{equation}
+So, the value of $Y_j$ is 
+\begin{equation} \label{value_Yjcoef}
+Y_j=\frac{R_j}{e^{-i2\pi(2j+1)\omega}-\lambda}
+\end{equation} 
+We estimate the second equation in~\eqref{reduced_systemcoef} with  Composite Trapezoidal Rule
+\begin{equation}
+\frac 1 n \sum^{n-1}_{k=0} 
+d(\theta_k) y(\theta_k) = \gamma
+\end{equation}
+The function $y$ evaluated on $\theta_k$ is 
+$y(\theta_k)=e^{-i\pi k/n}\sum_{j=0}^{n-1} Y_j e^{-i2\pi(2j+1)k/n}$.So, 
+\begin{equation}
+\frac 1 n 
+\sum_{j=0}^{n-1} \left ( 
+\sum_{k=0}^{n-1}  e^{-i\pi k/n} d(\theta_k)  e^{-i2\pi j k /n} 
+\right ) Y_j=\gamma 
+\end{equation}
+We define 
+\begin{equation}
+L_j:= \sum_{k=0}^{n-1}  e^{-i\pi k/n} d(\theta_k) e^{-i2\pi j k /n} 
+\end{equation}
+Obviously, $\mbox{DFT}(\{ e^{-i\pi k/n} d(\theta_k) \}_{k=0}^{n-1} )=\{L_j\}_{j=0}^{n-1}$. 
+We check that $L_{n-1-j}=\overline{L_j}$
+\begin{equation}
+L_{n-1-j}=\sum_{k=0}^{n-1} e^{-i\pi k /n} d(\theta_k) e^{-i2\pi(n-1-j)k/n}=
+\sum_{k=0}^{n-1}d(\theta_k) e^{-i\pi k /n} e^{i2\pi k /n} e^{i2\pi jk/n}=\overline{L_j}
+\end{equation}
+With the above notation 
+$$
+2 \int^{1/2}_0 d(\theta) y(\theta) \, d\theta=\frac 1 n \sum_{j=0}^{n-1} L_jY_j = \frac 2 n \Re(\sum_{j=0}^{n/2-1} L_jY_j)= \frac 2 n \Re \left ( \displaystyle\sum_{j=0}^{n/2-1} \frac{L_j R_j}{e^{-i2\pi (2j+1)\omega}-\lambda}\right )
+$$
+
+
+\begin{thebibliography}{99}
+\bibitem[1]{Angel16} A. Jorba, F.J. Mu\~noz, J.C. Tatjer \emph{On
+    non-smooth pitchfork bifurcations in invertible
+    queasi-periodically forced 1-D maps}. Preprint 
+\bibitem[2]{FFTW} M.~Friggo, S.G.~Johnson  \emph{FFTW}  Available in \url{http://www.fftw.org/}
+\end{thebibliography}
+\end{document}
+
+
